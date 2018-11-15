@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t andresj/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run andresj/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t andresj/multi-client ./client
+  - docker build -t andresj/multi-server ./server
+  - docker build -t andresj/multi-worker ./worker
+  - docker build -t andresj/multi-nginx ./nginx
+  # Log in to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to DockerHub
+  - docker push andresj/multi-client
+  - docker push andresj/multi-server
+  - docker push andresj/multi-worker
+  - docker push andresj/multi-nginx
